@@ -29,7 +29,13 @@ export default function App() {
       body.append('image', file)
 
       const res = await fetch('/api/analyze-qr', { method: 'POST', body })
-      const data = await res.json()
+
+      let data
+      try {
+        data = await res.json()
+      } catch {
+        throw new Error(`Server returned an empty response (HTTP ${res.status}). Check the backend terminal for errors.`)
+      }
 
       if (!res.ok) throw new Error(data.error ?? 'Analysis failed')
 

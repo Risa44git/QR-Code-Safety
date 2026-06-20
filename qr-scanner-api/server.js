@@ -39,6 +39,15 @@ app.post("/api/analyze-qr", upload.single("image"), async (req, res) => {
   }
 });
 
+// Catch-all: handles errors thrown by multer or other middleware
+// before the route handler runs — ensures response is always JSON
+app.use((err, req, res, next) => {
+  console.error("Unhandled middleware error:", err.message);
+  if (!res.headersSent) {
+    res.status(500).json({ error: err.message || "Internal error" });
+  }
+});
+
 app.listen(3001, () => {
   console.log("QR API running on http://localhost:3001");
 });
