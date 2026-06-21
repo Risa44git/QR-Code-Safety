@@ -282,8 +282,9 @@ async function riskEngine(url) {
   score = Math.min(100, score);
 
   let verdict = 'safe';
-  if (score >= 51) verdict = 'dangerous';
-  else if (score >= 21) verdict = 'suspicious';
+  if (score >= 61) verdict = 'dangerous';
+  else if (score >= 36) verdict = 'suspicious';
+  else if (score >= 21) verdict = 'low-risk';
 
   return { score, verdict, reasons, resolvedUrl: finalUrl !== url ? finalUrl : null };
 }

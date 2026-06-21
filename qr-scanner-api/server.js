@@ -5,9 +5,11 @@ const multer = require("multer");
 
 const qrDecoder = require("./src/qrDecoder");
 const riskEngine = require("./src/riskEngine");
+const analyzeContent = require("./src/contentAnalyzer");
 
 const app = express();
 app.use(cors());
+app.use(express.json());
 
 // store file in memory (NOT disk)
 const upload = multer({ storage: multer.memoryStorage() });
@@ -25,15 +27,35 @@ app.post("/api/analyze-qr", upload.single("image"), async (req, res) => {
       return res.status(400).json({ error: "No QR code found in image" });
     }
 
-    // 2. risk analysis
+    // 2. detect content type — non-URL codes skip riskEngine
+    const nonUrlResult = analyzeContent(url);
+    if (nonUrlResult) {
+      return res.json({ url, ...nonUrlResult });
+    }
+
+    // 3. URL risk analysis
     const result = await riskEngine(url);
 
-    // 3. response
+    // 4. response
     return res.json({
       url,
       ...result
     });
 
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Internal error" });
+  }
+});
+
+app.post("/api/analyze-url", async (req, res) => {
+  try {
+    const { url } = req.body;
+    if (!url) return res.status(400).json({ error: "No URL provided" });
+    const nonUrlResult = analyzeContent(url);
+    if (nonUrlResult) return res.json({ url, ...nonUrlResult });
+    const result = await riskEngine(url);
+    return res.json({ url, ...result });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "Internal error" });

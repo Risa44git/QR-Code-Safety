@@ -2,7 +2,8 @@ import { useState } from 'react'
 
 const VERDICT_META = {
   safe:       { label: 'Safe',       color: '#22c55e', bg: 'rgba(34,197,94,0.1)',   ring: '#22c55e' },
-  suspicious: { label: 'Suspicious', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',  ring: '#f59e0b' },
+  'low-risk': { label: 'Low Risk',   color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',  ring: '#f59e0b' },
+  suspicious: { label: 'Suspicious', color: '#f97316', bg: 'rgba(249,115,22,0.1)',  ring: '#f97316' },
   dangerous:  { label: 'Dangerous',  color: '#ef4444', bg: 'rgba(239,68,68,0.1)',   ring: '#ef4444' },
 }
 
@@ -37,12 +38,13 @@ function ScoreRing({ score, verdict }) {
 }
 
 export default function ResultCard({ result, onReset }) {
-  const { url, score, verdict, reasons, resolvedUrl } = result
+  const { url, score, verdict, reasons, resolvedUrl, isUrl } = result
+  const showVisitButton = isUrl !== false
   const meta = VERDICT_META[verdict] ?? VERDICT_META.safe
   const [confirmVisit, setConfirmVisit] = useState(false)
 
   function handleVisit() {
-    if (verdict === 'safe') {
+    if (verdict === 'safe' || verdict === 'low-risk') {
       window.open(url, '_blank', 'noopener,noreferrer')
     } else {
       setConfirmVisit(true)
@@ -61,6 +63,7 @@ export default function ResultCard({ result, onReset }) {
         <div className="result-summary">
           <span className="verdict-badge" style={{ color: meta.color, background: meta.bg }}>
             {verdict === 'safe' && '✓ '}
+            {verdict === 'low-risk' && '~ '}
             {verdict === 'suspicious' && '⚠ '}
             {verdict === 'dangerous' && '✕ '}
             {meta.label}
@@ -85,31 +88,33 @@ export default function ResultCard({ result, onReset }) {
         </div>
       )}
 
-      {/* Visit URL section */}
-      <div className="visit-section">
-        {!confirmVisit ? (
-          <button
-            className={`visit-btn visit-btn--${verdict}`}
-            onClick={handleVisit}
-          >
-            {verdict === 'safe' ? 'Open URL ↗' : 'Visit URL anyway ↗'}
-          </button>
-        ) : (
-          <div className="confirm-box">
-            <p className="confirm-msg">
-              ⚠ This URL scored <strong>{score}/100</strong> and is flagged as <strong>{meta.label.toLowerCase()}</strong>. Are you sure you want to visit it?
-            </p>
-            <div className="confirm-actions">
-              <button className="confirm-yes" onClick={confirmAndVisit}>
-                Yes, I understand the risk
-              </button>
-              <button className="confirm-no" onClick={() => setConfirmVisit(false)}>
-                No, stay safe
-              </button>
+      {/* Visit URL section — only for URL-type QR codes */}
+      {showVisitButton && (
+        <div className="visit-section">
+          {!confirmVisit ? (
+            <button
+              className={`visit-btn visit-btn--${verdict}`}
+              onClick={handleVisit}
+            >
+              {(verdict === 'safe' || verdict === 'low-risk') ? 'Open URL ↗' : 'Visit URL anyway ↗'}
+            </button>
+          ) : (
+            <div className="confirm-box">
+              <p className="confirm-msg">
+                ⚠ This URL scored <strong>{score}/100</strong> and is flagged as <strong>{meta.label.toLowerCase()}</strong>. Are you sure you want to visit it?
+              </p>
+              <div className="confirm-actions">
+                <button className="confirm-yes" onClick={confirmAndVisit}>
+                  Yes, I understand the risk
+                </button>
+                <button className="confirm-no" onClick={() => setConfirmVisit(false)}>
+                  No, stay safe
+                </button>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       <button className="reset-btn" onClick={onReset}>
         Scan another QR code

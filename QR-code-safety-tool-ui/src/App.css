@@ -363,8 +363,13 @@
   color: #fff;
 }
 
-.visit-btn--suspicious {
+.visit-btn--low-risk {
   background: #f59e0b;
+  color: #fff;
+}
+
+.visit-btn--suspicious {
+  background: #f97316;
   color: #fff;
 }
 
@@ -463,6 +468,81 @@
 .error-box .reset-btn {
   width: auto;
   margin: 0;
+}
+
+/* ── URL direct input ── */
+.url-input-section {
+  margin-top: 8px;
+}
+
+.url-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.url-divider::before,
+.url-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.url-divider span {
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.5;
+  white-space: nowrap;
+}
+
+.url-form {
+  display: flex;
+  gap: 8px;
+}
+
+.url-input {
+  flex: 1;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-2);
+  color: var(--text-h);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.url-input:focus {
+  border-color: var(--accent-border);
+}
+
+.url-input::placeholder {
+  opacity: 0.4;
+}
+
+.url-check-btn {
+  padding: 9px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-h);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.url-check-btn:hover:not(:disabled) {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+}
+
+.url-check-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 /* ── Footer ── */

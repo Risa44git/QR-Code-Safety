@@ -19,6 +19,7 @@ export default function App() {
   const [state, setState] = useState('idle')   // idle | loading | result | error
   const [result, setResult] = useState(null)
   const [errorMsg, setErrorMsg] = useState('')
+  const [urlInput, setUrlInput] = useState('')
 
   async function handleSubmit(file) {
     setState('loading')
@@ -53,10 +54,38 @@ export default function App() {
     }
   }
 
+  async function handleUrlSubmit(e) {
+    e.preventDefault()
+    const trimmed = urlInput.trim()
+    if (!trimmed) return
+    setState('loading')
+    setErrorMsg('')
+    try {
+      const res = await fetch('/api/analyze-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: trimmed }),
+      })
+      let data
+      try {
+        data = await res.json()
+      } catch {
+        throw new Error(`Server returned an empty response (HTTP ${res.status}).`)
+      }
+      if (!res.ok) throw new Error(data.error ?? 'Analysis failed')
+      setResult(data)
+      setState('result')
+    } catch (err) {
+      setErrorMsg(err.message)
+      setState('error')
+    }
+  }
+
   function handleReset() {
     setState('idle')
     setResult(null)
     setErrorMsg('')
+    setUrlInput('')
   }
 
   return (
@@ -76,14 +105,31 @@ export default function App() {
           </svg>
         </div>
         <div>
-          <h1 className="app-title">QR Safety Check</h1>
+          <h1 className="app-title">QR Shield</h1>
           <p className="app-subtitle">Decode and analyze any QR code for threats before you visit the link</p>
         </div>
       </header>
 
       <main className="app-main">
         {state === 'idle' && (
-          <UploadZone onSubmit={handleSubmit} disabled={false} />
+          <>
+            <UploadZone onSubmit={handleSubmit} disabled={false} />
+            <div className="url-input-section">
+              <div className="url-divider"><span>or check a URL directly</span></div>
+              <form className="url-form" onSubmit={handleUrlSubmit}>
+                <input
+                  className="url-input"
+                  type="text"
+                  placeholder="https://example.com"
+                  value={urlInput}
+                  onChange={e => setUrlInput(e.target.value)}
+                />
+                <button className="url-check-btn" type="submit" disabled={!urlInput.trim()}>
+                  Check
+                </button>
+              </form>
+            </div>
+          </>
         )}
         {state === 'loading' && <LoadingSpinner />}
         {state === 'result' && (
