@@ -37,7 +37,7 @@ function ScoreRing({ score, verdict }) {
 }
 
 export default function ResultCard({ result, onReset }) {
-  const { url, score, verdict, reasons } = result
+  const { url, score, verdict, reasons, resolvedUrl } = result
   const meta = VERDICT_META[verdict] ?? VERDICT_META.safe
   const [confirmVisit, setConfirmVisit] = useState(false)
 
@@ -66,6 +66,11 @@ export default function ResultCard({ result, onReset }) {
             {meta.label}
           </span>
           <p className="result-url" title={url}>{url}</p>
+          {resolvedUrl && (
+            <p className="result-url resolved-url" title={resolvedUrl}>
+              ↳ resolves to: {resolvedUrl}
+            </p>
+          )}
         </div>
       </div>
 

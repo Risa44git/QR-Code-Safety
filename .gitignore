@@ -1,3 +1,6 @@
+# Environment variables — never commit API keys
+.env
+
 # Compiled class file
 *.class
 

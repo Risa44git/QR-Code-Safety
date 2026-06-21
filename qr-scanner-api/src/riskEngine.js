@@ -57,11 +57,98 @@ const REDIRECT_PARAMS = [
   'redir', 'returnurl', 'destination', 'continue', 'forward',
 ];
 
-function riskEngine(url) {
+async function traceRedirects(url) {
+  const hops = [];
+  let current = url;
+
+  for (let i = 0; i < 10; i++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+
+    try {
+      const res = await fetch(current, {
+        method: 'GET',
+        redirect: 'manual',
+        signal: controller.signal,
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; QRSafetyBot/1.0)' },
+      });
+      clearTimeout(timeout);
+
+      if (res.status >= 300 && res.status < 400) {
+        const location = res.headers.get('location');
+        if (!location) break;
+        let next;
+        try { next = new URL(location, current).href; }
+        catch { break; }
+        if (next === current || hops.includes(next)) break;
+        hops.push(current);
+        current = next;
+      } else {
+        break;
+      }
+    } catch {
+      clearTimeout(timeout);
+      break;
+    }
+  }
+
+  return { finalUrl: current, hops };
+}
+
+async function checkSafeBrowsing(url) {
+  const key = process.env.GOOGLE_SAFE_BROWSING_KEY;
+  if (!key) return false;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const response = await fetch(
+      `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${key}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client: { clientId: 'qr-safety-tool', clientVersion: '1.0' },
+          threatInfo: {
+            threatTypes: ['MALWARE', 'SOCIAL_ENGINEERING', 'UNWANTED_SOFTWARE', 'POTENTIALLY_HARMFUL_APPLICATION'],
+            platformTypes: ['ANY_PLATFORM'],
+            threatEntryTypes: ['URL'],
+            threatEntries: [{ url }],
+          },
+        }),
+        signal: controller.signal,
+      }
+    );
+    const data = await response.json();
+    const hit = !!(data.matches && data.matches.length > 0);
+    console.log('[SafeBrowsing]', hit ? 'FLAGGED' : 'clean', url);
+    return hit;
+  } catch (err) {
+    console.log('[SafeBrowsing] skipped:', err.message);
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function riskEngine(url) {
   let score = 0;
   const reasons = [];
 
-  const parsed = getParsed(url);
+  // ── 0. Redirect tracing ────────────────────────────────────────────────────
+  const { finalUrl, hops } = await traceRedirects(url);
+  const analysisUrl = finalUrl;
+
+  if (hops.length > 0) {
+    reasons.push(`Redirects through ${hops.length} hop(s) to: ${finalUrl}`);
+  }
+  if (hops.length >= 3) {
+    score += 15;
+    reasons.push('Long redirect chain — common evasion technique');
+  }
+
+  const parsed = getParsed(analysisUrl);
   if (!parsed) {
     return { score: 100, verdict: 'dangerous', reasons: ['Invalid URL format'] };
   }
@@ -115,10 +202,10 @@ function riskEngine(url) {
   }
 
   // ── 7. URL length ──────────────────────────────────────────────────────────
-  if (url.length > 500) {
+  if (analysisUrl.length > 500) {
     score += 20;
     reasons.push('Extremely long URL — likely obfuscating destination');
-  } else if (url.length > 200) {
+  } else if (analysisUrl.length > 200) {
     score += 10;
     reasons.push('Unusually long URL for a QR code');
   }
@@ -133,7 +220,7 @@ function riskEngine(url) {
   }
 
   // ── 9. Base64 / encoded payload ────────────────────────────────────────────
-  if (/[A-Za-z0-9+/]{30,}={0,2}/.test(url)) {
+  if (/[A-Za-z0-9+/]{30,}={0,2}/.test(analysisUrl)) {
     score += 10;
     reasons.push('URL contains encoded data — possible obfuscated payload');
   }
@@ -185,13 +272,20 @@ function riskEngine(url) {
     }
   }
 
+  // ── 13. Google Safe Browsing — known malicious URL database ───────────────
+  const flagged = await checkSafeBrowsing(analysisUrl);
+  if (flagged) {
+    score += 50;
+    reasons.push('Flagged by Google Safe Browsing as a known malicious URL');
+  }
+
   score = Math.min(100, score);
 
   let verdict = 'safe';
   if (score >= 51) verdict = 'dangerous';
   else if (score >= 21) verdict = 'suspicious';
 
-  return { score, verdict, reasons };
+  return { score, verdict, reasons, resolvedUrl: finalUrl !== url ? finalUrl : null };
 }
 
 module.exports = riskEngine;

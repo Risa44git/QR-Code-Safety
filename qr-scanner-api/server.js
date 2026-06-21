@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
@@ -25,7 +26,7 @@ app.post("/api/analyze-qr", upload.single("image"), async (req, res) => {
     }
 
     // 2. risk analysis
-    const result = riskEngine(url);
+    const result = await riskEngine(url);
 
     // 3. response
     return res.json({
