@@ -77,8 +77,18 @@ export default function UploadZone({ onSubmit, disabled }) {
               <path d="M36 40v4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
             </svg>
             <p className="upload-title">Drop a QR code image here</p>
-            <p className="upload-sub">or <span className="upload-link">click to browse</span></p>
-            <p className="upload-hint">PNG, JPG, WEBP supported</p>
+            <p className="upload-sub">or</p>
+            <button
+              type="button"
+              className="camera-btn"
+              onClick={(e) => { e.stopPropagation(); inputRef.current?.click() }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+              Add Photo
+            </button>
           </div>
         )}
       </div>

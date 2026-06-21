@@ -114,6 +114,27 @@
   margin-top: 2px;
 }
 
+
+.camera-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border: 1.5px solid var(--accent-border);
+  border-radius: 8px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.camera-btn:hover {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+}
+
 .preview-wrapper {
   position: relative;
   padding: 16px;
@@ -312,6 +333,90 @@
   left: 6px;
   color: var(--accent);
 }
+
+/* ── Visit URL ── */
+.visit-section {
+  padding: 0 24px 16px;
+}
+
+.visit-btn {
+  width: 100%;
+  padding: 11px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.visit-btn:hover { opacity: 0.85; }
+
+.visit-btn--safe {
+  background: #22c55e;
+  color: #fff;
+}
+
+.visit-btn--suspicious {
+  background: #f59e0b;
+  color: #fff;
+}
+
+.visit-btn--dangerous {
+  background: #ef4444;
+  color: #fff;
+}
+
+.confirm-box {
+  border: 1px solid #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.confirm-msg {
+  font-size: 13px;
+  color: var(--text-h);
+  line-height: 1.5;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.confirm-yes {
+  flex: 1;
+  padding: 9px;
+  border-radius: 7px;
+  border: none;
+  background: #ef4444;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.confirm-yes:hover { opacity: 0.85; }
+
+.confirm-no {
+  flex: 1;
+  padding: 9px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-h);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.confirm-no:hover { background: var(--accent-bg); }
 
 /* ── Shared reset / error buttons ── */
 .reset-btn {

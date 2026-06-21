@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 const VERDICT_META = {
   safe:       { label: 'Safe',       color: '#22c55e', bg: 'rgba(34,197,94,0.1)',   ring: '#22c55e' },
   suspicious: { label: 'Suspicious', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',  ring: '#f59e0b' },
@@ -37,6 +39,20 @@ function ScoreRing({ score, verdict }) {
 export default function ResultCard({ result, onReset }) {
   const { url, score, verdict, reasons } = result
   const meta = VERDICT_META[verdict] ?? VERDICT_META.safe
+  const [confirmVisit, setConfirmVisit] = useState(false)
+
+  function handleVisit() {
+    if (verdict === 'safe') {
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } else {
+      setConfirmVisit(true)
+    }
+  }
+
+  function confirmAndVisit() {
+    window.open(url, '_blank', 'noopener,noreferrer')
+    setConfirmVisit(false)
+  }
 
   return (
     <div className="result-card">
@@ -63,6 +79,32 @@ export default function ResultCard({ result, onReset }) {
           </ul>
         </div>
       )}
+
+      {/* Visit URL section */}
+      <div className="visit-section">
+        {!confirmVisit ? (
+          <button
+            className={`visit-btn visit-btn--${verdict}`}
+            onClick={handleVisit}
+          >
+            {verdict === 'safe' ? 'Open URL ↗' : 'Visit URL anyway ↗'}
+          </button>
+        ) : (
+          <div className="confirm-box">
+            <p className="confirm-msg">
+              ⚠ This URL scored <strong>{score}/100</strong> and is flagged as <strong>{meta.label.toLowerCase()}</strong>. Are you sure you want to visit it?
+            </p>
+            <div className="confirm-actions">
+              <button className="confirm-yes" onClick={confirmAndVisit}>
+                Yes, I understand the risk
+              </button>
+              <button className="confirm-no" onClick={() => setConfirmVisit(false)}>
+                No, stay safe
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       <button className="reset-btn" onClick={onReset}>
         Scan another QR code
